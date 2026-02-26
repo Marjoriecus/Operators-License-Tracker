@@ -102,7 +102,7 @@ export default function LicenseTracker() {
         
         <div className="bg-slate-900 p-8 text-center">
           <h1 className="text-2xl font-black text-white uppercase tracking-widest">Operator Permit Tracker</h1>
-          <p className="text-slate-400 text-xs mt-2 uppercase font-bold tracking-tighter">Compliance & Safety Dashboard</p>
+          <p className="text-slate-400 text-xs mt-2 uppercase font-bold tracking-tighter">Compliance Dashboard</p>
         </div>
 
         <div className="p-8 space-y-8">
