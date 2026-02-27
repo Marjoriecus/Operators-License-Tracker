@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabaseClient';
 
 export default function LicenseTracker() {
   const [name, setName] = useState('');
-  const [licenseNum, setLicenseNum] = useState(''); // NEW: License Number State
   const [issuedDate, setIssuedDate] = useState('');
   const [expiry, setExpiry] = useState('');
   const [operators, setOperators] = useState([]);
@@ -29,15 +28,16 @@ export default function LicenseTracker() {
       .from('operators')
       .insert([{ 
         name, 
-        license_number: licenseNum, // NEW: Added to Database
         issued_date: issuedDate, 
         expiry_date: expiry, 
         status: 'Active' 
       }]);
     
     if (!error) {
-      setName(''); setLicenseNum(''); setIssuedDate(''); setExpiry('');
+      setName(''); setIssuedDate(''); setExpiry('');
       fetchOperators();
+    } else {
+      console.error("Error adding operator:", error.message);
     }
   };
 
@@ -49,18 +49,17 @@ export default function LicenseTracker() {
   };
 
   const downloadReport = () => {
-    // UPDATED: Headers include License #
-    const headers = ["Name", "License #", "Issued Date", "Expiry Date", "Status"];
+    const headers = ["Name", "Issued Date", "Expiry Date", "Status"];
     const rows = filteredOps.map(op => {
       const status = getStatus(op.expiry_date);
-      return [op.name, op.license_number, op.issued_date, op.expiry_date, status.label];
+      return [op.name, op.issued_date, op.expiry_date, status.label];
     });
     const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `License_Audit_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `Permit_Audit_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -86,8 +85,7 @@ export default function LicenseTracker() {
 
   const filteredOps = operators.filter(op => {
     const status = getStatus(op.expiry_date);
-    const matchesSearch = op.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         (op.license_number && op.license_number.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = op.name.toLowerCase().includes(searchTerm.toLowerCase());
     
     if (activeTab === 'ALL') return matchesSearch;
     if (activeTab === 'VALID') return matchesSearch && status.label === 'VALID';
@@ -108,16 +106,17 @@ export default function LicenseTracker() {
         <div className="p-8 space-y-8">
           {/* FORM */}
           <form onSubmit={handleAddOperator} className="space-y-4 bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Employee Name</label>
-                <input required className="p-3 rounded-xl border border-slate-200 font-bold focus:ring-4 focus:ring-blue-500/10 outline-none" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">License #</label>
-                <input required className="p-3 rounded-xl border border-slate-200 font-bold focus:ring-4 focus:ring-blue-500/10 outline-none" placeholder="ID Number" value={licenseNum} onChange={(e) => setLicenseNum(e.target.value)} />
-              </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Employee Name</label>
+              <input 
+                required 
+                className="p-3 rounded-xl border border-slate-200 font-bold focus:ring-4 focus:ring-blue-500/10 outline-none" 
+                placeholder="Full Name" 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+              />
             </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                  <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Issued Date</label>
@@ -134,7 +133,7 @@ export default function LicenseTracker() {
           {/* SEARCH & EXPORT */}
           <div className="flex flex-col md:flex-row gap-3">
             <div className="relative flex-1">
-              <input className="w-full p-4 pl-12 bg-white border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-blue-500" placeholder="Search name or ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <input className="w-full p-4 pl-12 bg-white border-2 border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-blue-500" placeholder="Search name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               <span className="absolute left-4 top-4 grayscale opacity-50">🔍</span>
             </div>
             <button onClick={downloadReport} className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-4 rounded-2xl uppercase text-[10px] tracking-widest shadow-lg transition-all active:scale-95">Export CSV</button>
@@ -157,7 +156,7 @@ export default function LicenseTracker() {
                 <div key={op.id} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-100 hover:shadow-md transition-all">
                   <div className="flex-1">
                     <h3 className="font-black text-slate-800 text-lg tracking-tight">
-                      {op.name} <span className="text-slate-400 text-sm font-medium">#{op.license_number}</span>
+                      {op.name}
                     </h3>
                     <p className="text-[10px] font-bold text-slate-400 uppercase">Expires: {op.expiry_date}</p>
                   </div>
