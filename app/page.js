@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import CertInput from '../components/CertInput';
-import OperatorCard from '../components/OperatorCard';
+import CertInput from './components/CertInput';
+import OperatorCard from './components/OperatorCard';
 
 export default function LicenseTracker() {
   const [name, setName] = useState('');
