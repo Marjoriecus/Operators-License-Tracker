@@ -21,7 +21,7 @@ def run_audit():
         today = datetime.now().date()
         warning_limit = today + timedelta(days=30)
 
-        # Categorize the data
+        # Categorize the data using only Name and Expiry
         expired = [o['name'] for o in operators if datetime.strptime(o['expiry_date'], '%Y-%m-%d').date() < today]
         warning = [o['name'] for o in operators if today <= datetime.strptime(o['expiry_date'], '%Y-%m-%d').date() <= warning_limit]
         safe_count = len(operators) - len(expired) - len(warning)
@@ -35,7 +35,7 @@ def run_audit():
         # --- 3. GENERATE THE TEXT FILE REPORT ---
         report_date = datetime.now().strftime('%Y-%m-%d')
         filename = f"Audit_Report_{report_date}.txt"
-        file_path = os.path.join(folder_name, filename) # Puts file inside the folder
+        file_path = os.path.join(folder_name, filename) 
         
         with open(file_path, "w", encoding="utf-8") as f:
             f.write(f"OFFICIAL LICENSING AUDIT REPORT\n")
@@ -57,7 +57,8 @@ def run_audit():
         print(f"✅ Success! Report archived in {folder_name} as: {filename}")
 
         # --- 4. AUTOMATICALLY OPEN THE FILE ---
-        os.startfile(file_path)
+        if os.name == 'nt': # For Windows
+            os.startfile(file_path)
 
     except Exception as e:
         print(f"Error connecting: {e}")
